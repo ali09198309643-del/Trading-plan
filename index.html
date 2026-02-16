@@ -1,0 +1,1922 @@
+
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>Trading Plan Pro - Layer 2</title>
+<link rel="icon" type="image/png" href="63281.png">
+<link rel="apple-touch-icon" href="63281.png">
+<link rel="manifest" href="data:application/manifest+json,{
+  'name':'TradeCalc',
+  'short_name':'TradeCalc',
+  'start_url':'.',
+  'display':'standalone',
+  'background_color':'#0a0a0c',
+  'theme_color':'#00d2ff',
+  'icons': [
+    {
+      'src': '63281.png',
+      'sizes': '192x192',
+      'type': 'image/png'
+    },
+    {
+      'src': '63281.png',
+      'sizes': '512x512',
+      'type': 'image/png'
+    }
+  ]
+}">
+
+
+
+
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --neon-blue: #00d2ff;
+            --neon-green: #39ff14;
+            --neon-red: #ff3131;
+            --neon-yellow: #f4ea11;
+            --text-gray: #a0a0a0;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: white; margin: 0; padding: 10px; padding-bottom: 120px; overflow-x: hidden; }
+
+        /* Typography */
+        h2, h3 { color: var(--neon-blue); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-right: 3px solid var(--neon-blue); padding-right: 10px; }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* Layer System */
+        #layer-2 { display: none; }
+        .hidden { display: none !important; }
+
+        /* Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; color: var(--text-gray); font-size: 0.9rem; margin-bottom: 5px; }
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0,210,255,0.3); }
+
+        /* Buttons Grid */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .mode-btn {
+            padding: 15px 5px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-gray);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .mode-btn.active {
+            background: rgba(0, 210, 255, 0.2);
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0,210,255,0.4);
+        }
+
+        /* Checklist Buttons */
+        .check-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .check-btns { display: flex; gap: 5px; }
+        .score-btn {
+            width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: #222; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .score-btn.yes.active { background: var(--neon-green); color: black; box-shadow: 0 0 10px var(--neon-green); }
+        .score-btn.no.active { background: var(--neon-red); color: white; box-shadow: 0 0 10px var(--neon-red); }
+        .score-btn.active { transform: scale(1.1); border: 2px solid white; }
+
+
+        /* Live Lot Display */
+        .live-lot-box { text-align: center; border: 2px dashed var(--neon-blue); padding: 15px; margin-top: 10px; }
+        .lot-val { font-size: 3.5rem; font-weight: 900; color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue); line-height: 1; }
+
+        /* Risk Badges */
+        .risk-badge { padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.2rem; }
+        .risk-low { background: rgba(57, 255, 20, 0.2); color: var(--neon-green); border: 1px solid var(--neon-green); }
+        .risk-mid { background: rgba(244, 234, 17, 0.2); color: var(--neon-yellow); border: 1px solid var(--neon-yellow); }
+        .risk-high { background: rgba(255, 49, 49, 0.2); color: var(--neon-red); border: 1px solid var(--neon-red); }
+
+        /* Sticky Bottom */
+        .sticky-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--neon-blue);
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            z-index: 1000;
+        }
+        .footer-item { text-align: center; font-size: 0.7rem; color: var(--text-gray); }
+        .footer-item span { display: block; color: white; font-weight: bold; font-size: 0.9rem; }
+
+        /* Overlay Lock */
+        #lock-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--neon-red); text-align: center; padding: 20px;
+        }
+
+        .summary-card { border-left: 5px solid var(--neon-blue); margin-top: 10px; font-family: monospace; }
+        .pos-value { color: var(--neon-green); }
+        .neg-value { color: var(--neon-red); }
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--neon-red);
+    cursor: pointer;
+    font-size: 1.2rem;
+    float: left; /* سطل آشغال سمت چپ کارت باشد */
+    padding: 0 5px;
+    transition: 0.3s;
+}
+.delete-btn:hover {
+    transform: scale(1.2);
+    text-shadow: 0 0 10px var(--neon-red);
+}
+/* برای مخفی کردن بخش‌ها */
+.page-hidden { display: none !important; }
+
+/* برای اینکه مطمئن شویم صفحات جدید روی همه چیز قرار می‌گیرند */
+/* جایگزین کدهای قبلی -page شود */
+.-page {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-color);
+    z-index: 3000;
+    /* این پدینگ 100 پیکسلی از رفتن محتوا زیر هدر جلوگیری می‌کند */
+    padding: 100px 20px 20px 20px !important; 
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-hidden {
+    display: none !important;
+}
+
+
+
+/* ۲. استایل صفحه تمام‌صفحه برای تاریخچه و نمودار */
+
+
+/* ۳. دکمه بازگشت در صفحات جدید */
+.back-btn {
+    width: 100%;
+    margin-bottom: 20px;
+    background: rgba(255, 49, 49, 0.1);
+    color: var(--neon-red);
+    border: 1px solid var(--neon-red);
+}
+
+/* وقتی کیبورد باز می‌شود، SweetAlert را کمی بالاتر ببر تا زیر کیبورد نرود */
+.swal2-container {
+    height: 100dvh !important; /* استفاده از ارتفاع داینامیک */
+}
+
+.swal2-popup {
+    margin-bottom: 150px !important; /* فاصله از پایین برای دیده شدن بالای کیبورد */
+}
+
+/* بهینه‌سازی برای موبایل */
+@media screen and (max-height: 500px) {
+    .swal2-popup {
+        margin-bottom: 50px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+
+
+
+    </style>
+</head>
+
+<body>
+  
+  <div style="position: sticky; top: 0; z-index: 4000; background: #1a1a1a; display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--neon-blue); height: 60px;">
+    <div id="back-icon" onclick="closeAllPages()" style="display: none; cursor: pointer; background: rgba(255, 49, 49, 0.1); width: 40px; height: 40px; border-radius: 8px; align-items: center; justify-content: center; border: 1px solid var(--neon-red); margin-left: 10px;">
+        <span style="color: var(--neon-red); font-size: 1.2rem;">⬅</span>
+    </div>
+    
+    <div id="menu-icon-container" onclick="toggleMenu()" style="display: flex; cursor: pointer; background: var(--card-bg); width: 40px; height: 40px; border-radius: 8px; align-items: center; justify-content: center; border: 1px solid var(--neon-blue);">
+        <span style="color: var(--neon-blue); font-size: 1.5rem;">☰</span>
+    </div>
+
+    <div style="flex-grow: 1; text-align: center; color: var(--neon-blue); font-weight: bold; font-size: 1.1rem; letter-spacing: 1px;">
+        TRADING PLAN PRO
+    </div>
+    <div style="width: 40px;"></div> 
+</div>
+
+
+<div id="side-menu" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: rgba(10, 10, 12, 0.98); backdrop-filter: blur(15px); z-index: 4500; transition: 0.3s; border-right: 1px solid var(--neon-blue); padding: 20px; display: flex; flex-direction: column; box-shadow: 5px 0 20px rgba(0,0,0,0.5);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h3 style="margin: 0; font-size: 1.1rem;">تنظیمات پیشرفته</h3>
+        <span onclick="toggleMenu()" style="cursor: pointer; color: var(--neon-red); font-size: 1.2rem;">✖</span>
+    </div>
+    
+    <div class="menu-item" onclick="openPage('vault-page'); toggleMenu();" style="padding: 15px; border-radius: 10px; background: rgba(0, 210, 255, 0.1); margin-bottom: 10px; cursor: pointer; border: 1px solid var(--neon-blue);">
+        <span style="display: block; color: var(--neon-blue);">💎 خزانه نئون (Vault)</span>
+        <small style="color: gray; font-size: 0.7rem;">مدیریت سرمایه کل و واریز/برداشت</small>
+    </div>
+
+    <div class="menu-item" onclick="importBackup()" style="padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); margin-bottom: 10px; cursor: pointer; border: 1px solid #333;">
+        <span style="display: block; color: var(--neon-yellow);">📥 ورود اطلاعات (Import)</span>
+        <small style="color: gray; font-size: 0.7rem;">بازگردانی اطلاعات از فایل قبلی</small>
+    </div>
+
+    <div class="menu-item" onclick="exportBackup()" style="padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); margin-bottom: 10px; cursor: pointer; border: 1px solid #333;">
+        <span style="display: block; color: var(--neon-green);">📤 پشتیبان‌گیری (Backup)</span>
+        <small style="color: gray; font-size: 0.7rem;">دریافت فایل از تمام معاملات</small>
+    </div>
+
+    <div class="menu-item" onclick="exportToExcel()" style="padding: 15px; border-radius: 10px; background: rgba(57, 255, 20, 0.05); margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(57, 255, 20, 0.2);">
+        <span style="display: block; color: var(--neon-green);">📊 خروجی اکسل (Excel)</span>
+        <small style="color: gray; font-size: 0.7rem;">دانلود فایل گزارش قابل ویرایش</small>
+    </div>
+
+    <div style="margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid #333;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #888; margin-bottom: 6px;">
+            <span>وضعیت حافظه (Storage)</span>
+            <span id="storage-percent" style="color: var(--neon-blue);">0%</span>
+        </div>
+        <div style="width: 100%; height: 4px; background: #111; border-radius: 2px; overflow: hidden;">
+            <div id="storage-bar" style="width: 0%; height: 100%; background: var(--neon-blue); transition: 0.5s; box-shadow: 0 0 5px var(--neon-blue);"></div>
+        </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #333; font-size: 0.7rem; color: #555; text-align: center;">
+        Trading Plan Pro - v2.1
+    </div>
+</div>
+
+
+<div id="menu-overlay" onclick="toggleMenu()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4400; display: none;"></div>
+
+  <div id="history-page" class="-page page-hidden">
+    <div id="-history-content"></div>
+</div>
+
+<div id="chart-page" class="-page page-hidden">
+    <div class="glass-card" style="margin-bottom: 15px; padding: 15px;">
+        <h3 style="font-size: 0.9rem; margin-bottom: 10px; border-right-color: var(--neon-yellow);">📅 فیلتر بازه زمانی</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label style="font-size: 0.7rem;">از تاریخ:</label>
+                <input type="date" id="filter-from" onchange="MainChart()" style="padding: 8px; font-size: 0.8rem; background: rgba(0,0,0,0.3); color:white; border:1px solid #444; width:100%;">
+            </div>
+            <div>
+                <label style="font-size: 0.7rem;">تا تاریخ:</label>
+                <input type="date" id="filter-to" onchange="MainChart()" style="padding: 8px; font-size: 0.8rem; background: rgba(0,0,0,0.3); color:white; border:1px solid #444; width:100%;">
+            </div>
+        </div>
+        <button class="mode-btn" onclick="resetChartFilter()" style="width: 100%; margin-top: 10px; font-size: 0.7rem; padding: 8px; border-color: var(--text-gray);">نمایش همه (ریست فیلتر)</button>
+    </div>
+
+    <div id="chart-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;"></div>
+
+    <div class="glass-card" style="flex-grow: 1; min-height: 350px;">
+        <h3 style="border-right-color: var(--neon-green); font-size: 0.9rem;">تحلیل رشد سرمایه</h3>
+        <div style="position: relative; height: 280px; width: 100%;">
+            <canvas id="equityChartMain"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="vault-page" class="-page page-hidden">
+    <div class="glass-card" style="border-bottom: 2px solid var(--neon-blue); padding: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <small style="color: var(--text-gray);">💎 Total Asset (ارزش کل)</small>
+            <div id="v-total-asset" style="font-size: 2.2rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px var(--neon-blue);">$0.00</div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="background: rgba(57, 255, 20, 0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(57, 255, 20, 0.2); text-align: center;">
+                <small style="color: var(--neon-green);">🏦 Safe Vault</small>
+                <div id="v-safe-vault" style="font-size: 1.1rem; font-weight: bold;">$0</div>
+            </div>
+            <div style="background: rgba(0, 210, 255, 0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(0, 210, 255, 0.2); text-align: center;">
+                <small style="color: var(--neon-blue);">⚡ In Margin</small>
+                <div id="v-in-margin" style="font-size: 1.1rem; font-weight: bold;">$0</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 10px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 8px; text-align: center;">
+            <small style="color: var(--text-gray);">📊 مبنای شروع روز (Day Start): </small>
+            <span id="v-day-start" style="color: var(--neon-yellow); font-weight: bold;">$0</span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+<button type="button" class="mode-btn" onclick="transferFlow('toMargin', event)" style="border-color: var(--neon-blue); color: var(--neon-blue); font-size: 0.75rem;">⚡ انتقال به Margin</button>
+<button type="button" class="mode-btn" onclick="transferFlow('toVault', event)" style="border-color: var(--neon-green); color: var(--neon-green); font-size: 0.75rem;">🏦 دریافت از Margin</button>
+
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+        <button class="mode-btn" onclick="vaultTransaction('deposit')" style="background: rgba(57, 255, 20, 0.1); border-color: var(--neon-green); color: var(--neon-green);">➕ واریز به خزانه</button>
+        <button class="mode-btn" onclick="vaultTransaction('withdraw')" style="background: rgba(255, 49, 49, 0.1); border-color: var(--neon-red); color: var(--neon-red);">➖ برداشت از خزانه</button>
+    </div>
+
+    <div id="vault-history-list"></div>
+</div>
+
+
+
+
+<div id="lock-screen">
+    <h1 style="font-size: 3rem;">⛔</h1>
+    <h2>توقف معامله</h2>
+    <p>ریسک روزانه شما به پایان رسیده است.</p>
+    <button class="mode-btn active" onclick="document.getElementById('lock-screen').style.display='none'" style="margin-top: 20px;">بازگشت برای اصلاح یا حذف</button>
+</div>
+
+<div id="layer-1" class="glass-card">
+    <h3>لایه ۱: آمادگی شروع روز</h3>
+    <div id="l1-items"></div>
+    <div class="risk-badge" id="l1-score-box" style="margin-top: 20px; border-color: gray; color: gray;">
+        امتیاز کل: <span id="l1-total">0</span> / 15
+    </div>
+    <button id="enter-layer2-btn" class="mode-btn active" onclick="goToLayer2()" style="width:100%; margin-top: 20px; display: none;">
+        🚀 تایید نهایی و ورود به بازار
+    </button>
+</div>
+
+<div id="layer-2" style="display:none;">
+    <div class="btn-grid">
+        <button class="mode-btn" onclick="setMode('range')">بازار رنج</button>
+        <button class="mode-btn" onclick="setMode('trend')">بازار روند</button>
+        <button class="mode-btn" onclick="setMode('scalp')">خیلی اسکلپ</button>
+    </div>
+
+    <div class="glass-card">
+        <div class="input-group">
+        
+<label>موجودی در مارجین (In Margin $)</label>
+
+           <input type="number" id="balance" onblur="calculateAll(); checkVaultBalance();">
+
+
+        </div>
+        <div class="input-group">
+            <label>حد ضرر (SL) به پیپت</label>
+            <input type="number" id="sl-pipette" placeholder="مثلاً 100" oninput="calculateAll()">
+        </div>
+        <div class="live-lot-box">
+            <label>لات ورود لحظه‌ای</label>
+            <div class="lot-val" id="top-lot">0.000</div>
+            <div style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 5px;">
+                <small style="color: var(--text-gray);">حد ضرر معادل:</small>
+                <span id="sl-dollar-display" style="color: var(--neon-red); font-weight: bold;">0.00</span> 
+                <small style="color: var(--neon-red);">$</small>
+            </div>
+        </div>
+    </div>
+
+    <div id="scoring-sections">
+        <div class="glass-card"><h3>تأیید تایم‌فریم</h3><div id="tf-list"></div></div>
+        <div class="glass-card"><h3>جهت روند</h3><div id="trend-list"></div></div>
+        <div class="glass-card">
+            <h3>استراتژی‌ها</h3>
+            <div class="check-item">
+                <span>ACD مارک فیشر</span>
+                <div class="check-btns">
+                    <button class="score-btn yes" onclick="setScore('acd', 10, this)">✔</button>
+                    <button class="score-btn no" onclick="setScore('acd', 0, this)">✖</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>پرایس اکشن</label>
+                <select id="pa-select" onchange="checkLayerAndCalc()">
+                    <option value="0">بدون تأیید</option>
+                    <option value="15">EOC (15 امتیاز)</option>
+                    <option value="5">EOW (5 امتیاز)</option>
+                </select>
+            </div>
+            <div class="input-group" style="margin-top:10px;">
+                <label>استراتژی ماینر</label>
+                <select id="miner-select" onchange="checkLayerAndCalc()">
+                    <option value="0">بدون تأیید</option>
+                    <option value="15">EOC (15 امتیاز)</option>
+                    <option value="5">EOW (5 امتیاز)</option>
+                </select>
+            </div>
+        </div>
+        <div class="glass-card"><h3>سایر تأییدها</h3><div id="other-list"></div></div>
+    </div>
+
+    <div id="today-trades-section" class="glass-card" style="border-top: 2px solid var(--neon-blue);">
+    <div id="trade-history-today"></div>
+</div>
+
+    <div class="glass-card">
+        <h3>ثبت نتیجه معامله</h3>
+        <div class="input-group">
+            <label>سود یا ضرر دلاری واقعی</label>
+            <input type="number" id="trade-result" placeholder="مثبت برای سود، منفی برای ضرر" step="0.01">
+        </div>
+        
+        <div class="input-group">
+        <label>یادداشت ترید (علت ورود یا درس ترید)</label>
+        <input type="text" id="trade-note" placeholder="مثلاً: خروج پله‌ای یا نقض استراتژی">
+    </div>
+        
+        <button class="mode-btn active" style="width:100%; margin-bottom: 10px;" onclick="saveTrade()">ثبت در تاریخچه امروز</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+            <button class="mode-btn" onclick="openPage('history-page')" style="border-color: var(--neon-yellow); color: var(--neon-yellow); padding: 15px;">📜 کل تاریخچه</button>
+            <button class="mode-btn" onclick="openPage('chart-page')" style="border-color: var(--neon-green); color: var(--neon-green); padding: 15px;">📊 مشاهده نمودار</button>
+        </div>
+        <button class="mode-btn" onclick="hardReset()" style="width:100%; margin-top: 15px; border-color: var(--neon-red); color: var(--neon-red); background: rgba(255, 49, 49, 0.1); font-size: 0.7rem;">⚠️ ریست کل اطلاعات</button>
+    </div>
+</div>
+<div class="sticky-footer" id="sticky-bar">
+    <div class="footer-item">ریسک: <span id="f-risk">0%</span></div>
+    <div class="footer-item">امتیاز: <span id="f-score">0</span></div>
+    <div class="footer-item" style="border: 1px solid rgba(0,210,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.03);">
+        اعتبار SL: <span id="f-sl-credit" style="color:var(--neon-yellow); font-size: 1.1rem; font-weight: bold;">0</span>
+    </div>
+    <div class="footer-item">سود امروز: <span id="f-daily-pnl">0</span></div>
+
+    <div class="footer-item">نوع: <span id="f-mode">-</span></div>
+    <div class="footer-item">لات: <span id="f-lot">0.000</span></div>
+    <div class="footer-item">شروع روز: <span id="f-start-bal">0</span></div>
+    <div class="footer-item">باقیمانده ریسک: <span id="f-rem-risk" style="color:var(--neon-green);">5%</span></div>
+</div>
+
+
+<input type="file" id="hidden-file-input" style="display:none" accept=".json">
+
+
+
+
+<script>
+  const Sound = {
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    
+    play(type) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        const now = this.ctx.currentTime;
+
+        if (type === 'click') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } 
+        else if (type === 'success') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+        else if (type === 'error') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+    }
+};
+
+  
+           // --- Data Structures ---
+let state = {
+    dayStartBalance: 0,
+    lastTradeDate: null, 
+    consumedRisk: 0,
+    trades: [],
+    layer1Complete: false,
+    mode: 'range', 
+    balance: 0,
+    sl: 0,
+    scores: {},
+    dailyRiskLimit: 5.0,
+    callMarginCount: 0,
+    lockAlertShown: false
+};
+
+
+// اضافه کردن به ابتدای بخش state
+state.vaultTransactions = state.vaultTransactions || [];
+state.vaultCash = state.vaultCash || 0; // پولی که در خزانه هست و در ترید نیست
+
+
+const toShamsiNum = (dateStr) => {
+    if (!dateStr) return null;
+    let shamsi;
+    // اگر از تقویم آمده باشد (میلادی با خط تیره)
+    if (String(dateStr).includes('-')) {
+        shamsi = new Date(dateStr).toLocaleDateString('fa-IR');
+    } else {
+        // اگر از قبل شمسی باشد (مثل تریدهای ذخیره شده)
+        shamsi = String(dateStr);
+    }
+    return parseInt(shamsi.replace(/\//g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+};
+
+
+
+    const L1_ITEMS = [
+        { id: 'mood', label: 'تأیید حال', pts: 5 },
+        { id: 'fund', label: 'تأیید فاندامنتال', pts: 5 },
+        { id: 'trend_daily', label: 'تأیید روند', pts: 5 }
+    ];
+
+    const L2_SCORING = {
+        tf: [
+            { id: 'd1', label: 'Daily', pts: 2.5 },
+            { id: 'h4', label: '4H', pts: 3.75 },
+            { id: 'h1', label: '1H', pts: 5 },
+            { id: 'm30', label: '30Min', pts: 6.25 }
+        ],
+        trend: [
+            { id: 'm15', label: '15Min', pts: 5 },
+            { id: 'm5', label: '5Min', pts: 5 },
+            { id: 'm1', label: '1Min', pts: 5 }
+        ],
+        others: [
+            { id: 'macd', label: 'واگرایی MACD', pts: 5 },
+            { id: 'slope', label: 'شیب (Slope)', pts: 5 },
+            { id: 'minor', label: 'گره مینور', pts: 7.5 },
+            { id: 'major', label: 'گره ماژور', pts: 10 }
+        ]
+    };
+
+    window.onload = () => {
+        loadData();
+        L1();
+        L2Checklists();
+        UI();
+    };
+
+        function L1() {
+        const container = document.getElementById('l1-items');
+        container.innerHTML = ''; 
+        
+        // مهم: ریست کردن امتیازهای لایه ۱ در حافظه هر بار که رندر می‌شود
+        L1_ITEMS.forEach(item => state.scores[item.id] = 0);
+        document.getElementById('l1-total').innerText = "0";
+
+        L1_ITEMS.forEach(item => {
+            container.innerHTML += `
+                <div class="check-item">
+                    <span>${item.label}</span>
+                    <div class="check-btns">
+                        <button class="score-btn yes" onclick="setL1Score('${item.id}', ${item.pts}, this)">✔</button>
+                        <button class="score-btn no" onclick="setL1Score('${item.id}', 0, this)">✖</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+
+    function L2Checklists() {
+        document.getElementById('tf-list').innerHTML = L2_SCORING.tf.map(i => createCheckHTML(i)).join('');
+        document.getElementById('trend-list').innerHTML = L2_SCORING.trend.map(i => createCheckHTML(i)).join('');
+        document.getElementById('other-list').innerHTML = L2_SCORING.others.map(i => createCheckHTML(i)).join('');
+    }
+
+    function createCheckHTML(item) {
+        return `<div class="check-item">
+                <span>${item.label} (${item.pts})</span>
+                <div class="check-btns">
+                    <button class="score-btn yes" onclick="setScore('${item.id}', ${item.pts}, this)">✔</button>
+                    <button class="score-btn no" onclick="setScore('${item.id}', 0, this)">✖</button>
+                </div>
+            </div>`;
+    }
+
+                    function setL1Score(id, pts, btn) {
+                      Sound.play('click');
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.scores[id] = pts;
+
+        let totalScore = 0;
+        let clickedCount = 0;
+
+        L1_ITEMS.forEach(item => {
+            const row = document.querySelector(`[onclick*="setL1Score('${item.id}'"]`).parentElement;
+            if (row.querySelector('.active')) {
+                clickedCount++;
+                totalScore += (state.scores[item.id] || 0);
+            }
+        });
+
+        document.getElementById('l1-total').innerText = totalScore; 
+
+        // به جای انتقال خودکار، فقط اگر هر ۳ ردیف کلیک شده بود، دکمه تایید را نشان بده
+        const enterBtn = document.getElementById('enter-layer2-btn');
+        if(clickedCount === L1_ITEMS.length && totalScore >= 15) {
+            enterBtn.style.display = 'block';
+        } else {
+            enterBtn.style.display = 'none';
+        }
+    }
+
+    // تابع جدید برای انتقال دستی
+    function goToLayer2() {
+      if (Sound.ctx.state === 'suspended') Sound.ctx.resume();
+        state.layer1Complete = true;
+        document.getElementById('layer-2').style.display = 'block';
+        document.getElementById('layer-1').style.display = 'none';
+        saveData();
+    }
+
+
+    function setMode(m) {
+        state.mode = m;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('scoring-sections').className = (m === 'scalp' ? 'hidden' : '');
+        calculateAll();
+    }
+
+        function setScore(id, pts, btn) {
+          Sound.play('click');
+        // ایست بازرسی قبل از اعمال امتیاز: اگر وقت تایید لایه ۱ است، نگذار تیک بزند
+        if (state.trades.length > 0 && state.trades.length % 3 === 0 && !state.layer1Complete) {
+            document.getElementById('layer-2').style.display = 'none';
+            document.getElementById('layer-1').style.display = 'block';
+            window.scrollTo(0,0);
+            return; // اجازه نمی‌دهد تیک بخورد تا لایه ۱ تایید شود
+        }
+
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.scores[id] = pts;
+        calculateAll();
+    }
+
+
+function calculateAll() {
+    // ۱. دریافت مقادیر ورودی
+    state.balance = parseFloat(document.getElementById('balance').value) || 0;
+    state.sl = parseFloat(document.getElementById('sl-pipette').value) || 0;
+    
+    // ۲. پیدا کردن تریدهای امروز
+    const todayStr = new Date().toLocaleDateString('fa-IR');
+    const todayTrades = state.trades.filter(t => t.date === todayStr);
+
+    // ۳. بازسازی صحیح ریسک (بدون دستکاری بی‌مورد شروع روز)
+    if (todayTrades.length > 0) {
+        state.consumedRisk = todayTrades.reduce((sum, t) => {
+            const rD = parseFloat(t.riskD) || 1; 
+            let impact = (t.resultD < 0) ? Math.abs(t.resultD/rD)*t.riskP : (t.resultD > 0 ? -(t.resultD/rD)*t.riskP : 0);
+            return sum + impact;
+        }, 0);
+    } else {
+        // فقط اگر هیچ تریدی نبود، مبنای روز ریست میشه
+        state.dayStartBalance = state.balance;
+        state.consumedRisk = 0;
+    }
+
+    const startBal = state.dayStartBalance;
+
+    // ۴. محاسبه امتیازات لایه ۲
+    let totalScore = 0;
+    Object.keys(state.scores).forEach(key => {
+        if(!L1_ITEMS.find(i => i.id === key)) totalScore += (state.scores[key] || 0);
+    });
+    totalScore += parseFloat(document.getElementById('pa-select').value) || 0;
+    totalScore += parseFloat(document.getElementById('miner-select').value) || 0;
+    
+    // ۵. تعیین درصد ریسک ترید فعلی
+    let riskPercent = (state.mode === 'scalp') ? 2 : (totalScore < 70 ? 3 : (totalScore < 90 ? 4 : 5));
+    
+    // ۶. محاسبه لات و نمایش
+    let lotSize = (state.balance > 0 && state.sl > 0) ? (state.balance * (riskPercent / 100)) / state.sl : 0;
+    document.getElementById('top-lot').innerText = lotSize.toFixed(3);
+    document.getElementById('sl-dollar-display').innerText = (state.balance * (riskPercent / 100)).toFixed(2);
+    
+    updateFooterStyle(riskPercent, state.mode);
+
+    // ۷. محاسبه ریسک باقیمانده (بر اساس شروع روز واقعی)
+    let remainingRiskPercent = 0;
+    if (state.balance > 0 && startBal > 0) {
+        remainingRiskPercent = ((state.balance - (0.95 * startBal)) / state.balance) * 100;
+    }
+
+    // ۸. آپدیت فوتر در لحظه
+    document.getElementById('f-rem-risk').innerText = remainingRiskPercent.toFixed(2) + "%";
+    document.getElementById('f-start-bal').innerText = startBal.toFixed(2) + "$";
+
+    // ۹. مدیریت قفل
+    const isRiskFinished = remainingRiskPercent <= 0 && todayTrades.length > 0;
+    const saveBtn = document.querySelector('button[onclick="saveTrade()"]');
+
+    if (isRiskFinished) {
+        document.getElementById('f-rem-risk').style.color = "var(--neon-red)";
+        if(saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerText = "⛔ ریسک تمام شده";
+        }
+    } else {
+        state.lockAlertShown = false; 
+        document.getElementById('f-rem-risk').style.color = "var(--neon-green)";
+        if(saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = "ثبت در تاریخچه امروز";
+        }
+    }
+
+    // ۱۰. اعتبار SL
+    const slCreditEl = document.getElementById('f-sl-credit');
+    if (slCreditEl) {
+        slCreditEl.innerText = calculateSLCredit(state.balance, startBal, riskPercent);
+    }
+
+    saveData();
+}
+
+
+
+
+
+    function saveTrade() {
+    // ایست بازرسی لایه ۱
+    if (state.trades.length > 0 && state.trades.length % 3 === 0 && !state.layer1Complete) {
+        alert("ابتدا لایه ۱ را تایید کنید!");
+        document.getElementById('layer-2').style.display = 'none';
+        document.getElementById('layer-1').style.display = 'block';
+        return;
+    }
+
+    const resVal = parseFloat(document.getElementById('trade-result').value);
+    const slVal = parseFloat(document.getElementById('sl-pipette').value); 
+    const noteVal = document.getElementById('trade-note').value || "---";
+
+    if(isNaN(resVal)) return alert("نتیجه را وارد کنید");
+
+    // --- شروط امنیتی بالانس و حد ضرر ---
+    if (state.balance <= 0) {
+        alert("بالانس شما صفر یا منفی است!");
+        return;
+    }
+    if (isNaN(slVal) || slVal <= 0) {
+        alert("بدون تعیین حد ضرر (SL) مجاز به ثبت معامله نیستید!");
+        return;
+    }
+// --- داخل تابع saveTrade ---
+const today = new Date().toLocaleDateString('fa-IR'); 
+
+// اگر اولین ترید امروز است یا کلاً تاریخی ثبت نشده
+if (state.lastTradeDate !== today) {
+    state.dayStartBalance = state.balance; 
+    state.lastTradeDate = today;
+    state.consumedRisk = 0; // ریست کردن ریسک مصرفی برای روز جدید
+}
+
+
+    
+    
+
+
+    // --- ۲. محاسبات ترید ---
+    
+    // محاسبه مجدد امتیاز لایه ۲ برای اطمینان از دقت محاسبات
+    let currentScore = 0;
+    Object.keys(state.scores).forEach(key => {
+        if(!L1_ITEMS.find(i => i.id === key)) currentScore += (state.scores[key] || 0);
+    });
+    currentScore += parseFloat(document.getElementById('pa-select').value) || 0;
+    currentScore += parseFloat(document.getElementById('miner-select').value) || 0;
+
+    // تعیین درصد ریسک بر اساس قوانین استراتژی خودت
+    const riskP = (state.mode === 'scalp') ? 2 : (currentScore < 70 ? 3 : (currentScore < 90 ? 4 : 5));
+    
+    // محاسبه ریسک دلاری واقعی (مبنای محاسبه R)
+    const riskD = state.balance * (riskP / 100);
+
+        const now = new Date();
+    const shamsiDate = now.toLocaleDateString('fa-IR');
+    // ایجاد فرمت ساعت و دقیقه
+    const timeStr = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+
+        const trade = {
+        id: now.getTime(),
+        date: shamsiDate, 
+        time: timeStr,
+        dateValue: toShamsiNum(shamsiDate),
+        timestamp: now.getTime(),
+        mode: state.mode,
+        riskP: riskP,
+        riskD: riskD.toFixed(2), // *** این خط بسیار حیاتی است که در کد شما نبود ***
+        slPipette: slVal,
+        resultD: resVal,
+        r: (riskD !== 0) ? parseFloat((resVal / riskD).toFixed(2)) : 0,
+        score: currentScore,
+        entryBalance: state.balance.toFixed(2),
+        note: noteVal 
+    };
+
+    
+        // --- شروع بخش اصلاح شده برای کال‌مارجین ---
+    
+    // ۱. بررسی اینکه آیا معامله باعث کال مارجین شده یا خیر
+    if (resVal < 0 && Math.abs(resVal) >= state.balance) {
+        // حساب صفر شد
+        state.balance = 0;
+        state.callMarginCount = (state.callMarginCount || 0) + 1; // شمارش تعداد کال مارجین
+        
+        if (typeof Sound !== 'undefined') Sound.play('error');
+        
+        Swal.fire({
+            title: '❌ CALL MARGIN',
+            text: `مبلغ ضرر از کل دارایی مارجین شما بیشتر بود. حساب صفر شد! (تعداد کل کال‌مارجین‌ها: ${state.callMarginCount})`,
+            icon: 'error',
+            background: '#1a1a1a', color: '#ff3131'
+        });
+    } else {
+        // اگر کال مارجین نشد، مبلغ سود یا ضرر را اعمال کن
+        state.balance += resVal;
+    }
+
+    // ۲. محاسبه تأثیر ریسک روی حد مجاز روزانه (Risk Consumption)
+    if (!state.vault) state.vault = { transactions: [] };
+    let impact = (resVal < 0) ? Math.abs(resVal/riskD)*riskP : (resVal > 0 ? -(resVal/riskD)*riskP : 0);
+    state.consumedRisk += impact;
+    
+    // ۳. اضافه کردن معامله به لیست
+    state.trades.unshift(trade);
+    
+    // --- پایان بخش اصلاح شده ---
+
+    // قفل کردن برای لایه ۱ بعد از هر ۳ معامله
+    if (state.trades.length % 3 === 0) {
+        state.layer1Complete = false;
+        L1_ITEMS.forEach(i => state.scores[i.id] = 0);
+        document.querySelectorAll('#l1-items .score-btn').forEach(b => b.classList.remove('active'));
+        const totalL1 = document.getElementById('l1-total');
+        if(totalL1) totalL1.innerText = "0";
+        if(document.getElementById('enter-layer2-btn')) {
+            document.getElementById('enter-layer2-btn').style.display = 'none';
+        }
+    }
+Sound.play('success');
+    UI();
+    document.getElementById('trade-result').value = '';
+    document.getElementById('trade-note').value = ''; 
+    resetScoresOnly(); // پاکسازی فرم برای ترید بعدی
+
+    
+    saveData();
+    
+    // NEW: رندر مجدد خزانه برای اعمال سود در لحظه
+    if (typeof renderVault === "function") renderVault();
+}
+
+
+function deleteTrade(id) {
+    if(!confirm("حذف معامله؟")) return;
+    
+    if (typeof Sound !== 'undefined') Sound.play('error');
+    
+    const idx = state.trades.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    const t = state.trades[idx];
+    
+    // ۱. اصلاح بالانس لحظه‌ای
+    state.balance -= parseFloat(t.resultD);
+    
+    // ۲. اصلاح ریسک مصرف شده
+    const riskD = parseFloat(t.riskD);
+    if (riskD !== 0) {
+        let impact = (t.resultD < 0) ? Math.abs(t.resultD/riskD)*t.riskP : (t.resultD > 0 ? -(t.resultD/riskD)*t.riskP : 0);
+        state.consumedRisk -= impact;
+    }
+    
+    // ۳. حذف معامله از لیست
+    state.trades.splice(idx, 1);
+    state.lockAlertShown = false; 
+
+        // ۴. آپدیت هوشمند نقطه شروع روز
+    updateDynamicDayStart();
+
+
+    // ۵. آپدیت اینپوت و فراخوانی زنجیره‌ای
+    if(document.getElementById('balance')) {
+        document.getElementById('balance').value = state.balance.toFixed(2);
+    }
+    
+    saveData();
+    calculateAll(); // ریسک باقیمانده رو بلافاصله اصلاح می‌کنه
+    UI();
+    
+    if (typeof History === "function") History();
+    if (typeof renderVault === "function") renderVault();
+}
+
+
+
+
+
+
+
+function History() {
+    const container = document.getElementById('-history-content');
+    if(!container) return;
+    
+    container.innerHTML = '<h3>آرشیو کامل معاملات</h3>';
+    
+    // سورت کردن: جدیدترین ترید اول بیاید
+    const sortedTrades = [...state.trades].sort((a, b) => b.id - a.id);
+    
+    const groups = {};
+    sortedTrades.forEach(t => {
+        const date = t.date || 'نامشخص';
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(t);
+    });
+
+    Object.keys(groups).forEach(date => {
+        container.innerHTML += `<div style="color:var(--neon-blue); margin: 20px 0 10px; border-bottom:1px solid #333; padding-bottom:5px;">📅 معاملات ${date}</div>`;
+        
+        groups[date].forEach(t => {
+            container.innerHTML += `
+                <div class="glass-card summary-card" style="position: relative; border-right: 5px solid ${t.resultD >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}; margin-bottom: 10px; padding: 15px; text-align:right;">
+                    <div style="position: absolute; left: 10px; top: 10px; display: flex; gap: 10px;">
+                        
+                        <button class="delete-btn" style="float:none; background:none; border:none;" onclick="deleteTrade(${t.id})">🗑</button>
+                    </div>
+                    
+                    <b style="color:var(--neon-blue)">${t.mode.toUpperCase()}</b> | امتیاز: ${t.score}<br>
+                    
+                    <div style="font-size: 0.75rem; color: var(--text-gray); margin: 5px 0;">
+                        <span style="color:var(--neon-blue)">⏰ ${t.time || '--:--'}</span> | 
+                        <span>بالانس ورود: ${t.entryBalance}$</span> | 
+                        <span>حد ضرر: ${t.riskD}$ <small>(${t.slPipette || 0} p)</small></span>
+                    </div>
+                    
+                    نتیجه: <span class="${t.resultD >= 0 ? 'pos-value' : 'neg-value'}" style="font-weight:bold;">${t.resultD}$ (R: ${t.r})</span>
+                    
+                    <div style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 5px;">
+                        <button onclick="let n = this.nextElementSibling; n.style.display = n.style.display === 'none' ? 'block' : 'none';" 
+                                style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; font-size: 0.75rem; padding:0; font-family:inherit;">
+                            📝 مشاهده یادداشت
+                        </button>
+                        <div style="display:none; font-size: 0.8rem; color: #bbb; margin-top: 5px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px; font-style: italic; border-right: 2px solid var(--neon-yellow);">
+                            ${t.note || 'توضیحاتی ثبت نشده است.'}
+                        </div>
+                    </div>
+                </div>`;
+                    // --- ریست کردن فرم برای معامله بعدی ---
+    state.scores = {}; // پاک کردن امتیازها در حافظه
+    
+    // برداشتن تیک تمام دکمه‌های Yes/No
+    document.querySelectorAll('.score-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // ریست کردن لیست‌های کشویی (پرایس اکشن و ماینر)
+    if(document.getElementById('pa-select')) document.getElementById('pa-select').value = "0";
+    if(document.getElementById('miner-select')) document.getElementById('miner-select').value = "0";
+    
+    // ریست کردن فیلد حد ضرر (اختیاری - اگر دوست داری برای ترید بعد خالی باشد)
+    // document.getElementById('sl-pipette').value = '';
+
+    // اجرای مجدد محاسبات برای اینکه فوتر هم به حالت پیش‌فرض (خاکستری/آبی) برگردد
+    calculateAll();
+
+        });
+    
+    });
+}
+
+
+
+function UI() {
+    const toNum = s => parseInt(String(s).replace(/\//g, '').replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+    const todayVal = toNum(new Date().toLocaleDateString('fa-IR')); 
+    
+    let dailyProfit = 0;
+    const todayTrades = state.trades.filter(t => {
+        const tVal = t.dateValue || toNum(t.date);
+        return tVal === todayVal;
+    });
+
+    todayTrades.forEach(t => dailyProfit += parseFloat(t.resultD));
+
+    // آپدیت مقادیر فوتر
+    document.getElementById('f-daily-pnl').innerText = dailyProfit.toFixed(2) + "$";
+    document.getElementById('f-daily-pnl').style.color = dailyProfit >= 0 ? "var(--neon-green)" : "var(--neon-red)";
+    document.getElementById('balance').value = state.balance.toFixed(2);
+    document.getElementById('f-start-bal').innerText = state.dayStartBalance.toFixed(2) + "$";
+
+    const container = document.getElementById('trade-history-today');
+    if(container) {
+        container.innerHTML = `<h4 style="color:var(--neon-blue); margin-bottom:10px;">⚡ معاملات امروز</h4>`;
+        
+        if(todayTrades.length === 0) {
+            container.innerHTML += '<p style="color:gray; font-size:0.8rem; text-align:center;">هنوز تریدی ثبت نشده</p>';
+        }
+        
+        todayTrades.forEach(t => {
+            container.innerHTML += `
+                <div class="glass-card summary-card" style="position: relative; border-right: 5px solid ${t.resultD >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}; margin-bottom: 10px; padding: 15px; text-align:right;">
+                    <div style="position: absolute; left: 10px; top: 10px; display: flex; gap: 10px;">
+                        
+                        <button class="delete-btn" style="float:none; background:none; border:none; cursor:pointer;" onclick="deleteTrade(${t.id})">🗑</button>
+                    </div>
+                    <b style="color:var(--neon-blue)">${t.mode.toUpperCase()}</b> | امتیاز: ${t.score}<br>
+                    <div style="font-size: 0.75rem; color: var(--text-gray); margin: 5px 0;">
+                        <span>${t.date} <small style="color:var(--neon-blue)">⏰ ${t.time || ''}</small></span> | 
+                        <span>ورود: ${t.entryBalance}$</span> |
+                        <span style="color:var(--neon-red)">SL: ${t.riskD || 0}$ (${t.slPipette || 0}p)</span>
+                    </div>
+                    نتیجه: <span class="${t.resultD >= 0 ? 'pos-value' : 'neg-value'}" style="font-weight:bold;">${t.resultD}$ (R: ${t.r})</span>
+                    <div style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 5px;">
+                        <button onclick="let n = this.nextElementSibling; n.style.display = n.style.display === 'none' ? 'block' : 'none';" 
+                                style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; font-size: 0.75rem; padding:0; font-family:inherit;">
+                            📝 مشاهده یادداشت ترید
+                        </button>
+                        <div style="display:none; font-size: 0.8rem; color: #bbb; margin-top: 5px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px; font-style: italic; border-right: 2px solid var(--neon-yellow);">
+                            ${t.note || 'توضیحاتی ثبت نشده است.'}
+                        </div>
+                    </div>
+                </div>`; 
+        });
+    }
+    // این بخش بسیار حیاتی است و باید بماند
+    checkBalanceLock();
+}
+
+
+// ۲. این تابع جدید را هم زیر تابع قبلی اضافه کن
+
+
+
+function resetScoresOnly() {
+    state.scores = {}; // پاک کردن امتیازها از حافظه
+    
+    // برداشتن تیک تمام دکمه‌های Yes/No در لایه ۲
+    document.querySelectorAll('#scoring-sections .score-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // ریست کردن سلکت باکس‌های پرایس اکشن و ماینر
+    const pa = document.getElementById('pa-select');
+    const mi = document.getElementById('miner-select');
+    if(pa) pa.value = "0";
+    if(mi) mi.value = "0";
+
+    // ریست کردن اینپوت‌های ثبت نتیجه
+    document.getElementById('trade-result').value = '';
+    document.getElementById('trade-note').value = '';
+
+    // آپدیت لحظه‌ای فوتر (تا ریسک و امتیاز صفر شوند)
+    calculateAll();
+}
+
+
+
+
+    function saveData() { localStorage.setItem('trade_plan_state', JSON.stringify(state)); }
+
+    function loadData() {
+        const saved = localStorage.getItem('trade_plan_state');
+        if(saved) {
+            state = JSON.parse(saved);
+            state.layer1Complete = false;
+            document.getElementById('layer-1').style.display = 'block';
+            document.getElementById('layer-2').style.display = 'none';
+            UI();
+        }
+    }
+
+        function hardReset() {
+        if(!confirm("آیا مطمئن هستید که می‌خواهید کل اطلاعات پاک شود؟")) return;
+        localStorage.removeItem('trade_plan_state');
+        location.reload(); // صفحه را مثل روز اول لود می‌کند
+    }
+
+function checkLayerAndCalc() {
+    // ایست بازرسی برای لیست‌های کشویی
+    if (state.trades.length > 0 && state.trades.length % 3 === 0 && !state.layer1Complete) {
+        document.getElementById('layer-2').style.display = 'none';
+        document.getElementById('layer-1').style.display = 'block';
+        window.scrollTo(0,0);
+        return;
+    }
+    calculateAll(); // اگر مشکلی نبود، محاسبات را انجام بده
+}
+
+        
+      
+
+
+
+function updateDynamicDayStart() {
+    const todayStr = new Date().toLocaleDateString('fa-IR');
+    
+    // پیدا کردن تمام معاملات امروز و مرتب‌سازی از قدیمی به جدید (بر اساس زمان ثبت)
+    const todayTrades = state.trades
+        .filter(t => t.date === todayStr)
+        .sort((a, b) => a.id - b.id); 
+
+    if (todayTrades.length > 0) {
+        // شروع روز می‌شود: بالانسِ ورودِ اولین معامله‌ای که هنوز در لیست هست
+        state.dayStartBalance = parseFloat(todayTrades[0].entryBalance);
+    } else {
+        // اگر هیچ معامله‌ای برای امروز باقی نمانده، بالانس فعلی شروع روز می‌شود
+        state.dayStartBalance = state.balance;
+    }
+}
+
+
+
+        
+    // ۱. تابع اصلی برای رسم نمودار و اعمال فیلتر هوشمند
+
+function MainChart() {
+    const canvas = document.getElementById('equityChartMain');
+    if (!canvas) return;
+
+    // ۱. گرفتن مقادیر فیلتر
+    const fromVal = document.getElementById('filter-from').value;
+    const toVal = document.getElementById('filter-to').value;
+
+    // ۲. آماده‌سازی تریدها (کپی و معکوس کردن برای ترتیب زمانی از قدیم به جدید)
+    let tradesToProcess = [...state.trades].reverse();
+
+    // ۳. اعمال فیلتر هوشمند
+    if (fromVal || toVal) {
+        const fromNum = fromVal ? toShamsiNum(fromVal) : 0;
+        const toNum = toVal ? toShamsiNum(toVal) : 99999999;
+
+        tradesToProcess = tradesToProcess.filter(t => {
+            const tVal = t.dateValue || toShamsiNum(t.date);
+            return tVal >= fromNum && tVal <= toNum;
+        });
+    }
+
+    // ۴. بروزرسانی حیاتی باکس‌های آمار (حالا فقط تریدهای فیلتر شده را محاسبه می‌کند)
+    updateChartStats(tradesToProcess);
+
+    // ۵. رسم نمودار با منطق شروع داینامیک
+    if (window.myMainChart instanceof Chart) window.myMainChart.destroy();
+    
+    const ctx = canvas.getContext('2d');
+    
+    // تعیین نقطه شروع: اگر تریدی بود، بالانسِ ورودِ اولین تریدِ فیلتر شده را مبنا قرار بده
+    let startBal = tradesToProcess.length > 0 ? 
+        parseFloat(tradesToProcess[0].entryBalance) : 
+        (state.trades.length > 0 ? parseFloat(state.trades[state.trades.length-1].entryBalance) : state.balance);
+    
+    let chartData = [startBal];
+    let labels = ["شروع"];
+    let currentTotal = startBal;
+
+    tradesToProcess.forEach((t, i) => {
+        currentTotal += parseFloat(t.resultD);
+        chartData.push(currentTotal);
+        // نمایش تاریخ یا شماره ترید در محور افقی
+        labels.push(t.date ? t.date.split('/').slice(1).join('/') : `T${i + 1}`); 
+    });
+
+    window.myMainChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'رشد حساب',
+                data: chartData,
+                borderColor: '#00d2ff',
+                backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: (context) => (context.dataIndex === 0 ? 4 : 5),
+                pointBackgroundColor: (context) => {
+                    const idx = context.dataIndex;
+                    if (idx === 0) return '#fff';
+                    return chartData[idx] >= chartData[idx-1] ? '#39ff14' : '#ff3131';
+                },
+                pointBorderColor: '#0a0a0c',
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    rtl: true,
+                    callbacks: {
+                        label: (context) => ` بالانس: ${context.raw.toFixed(2)}$`
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, 
+                    ticks: { color: '#a0a0a0', font: { size: 10 } } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: '#888', font: { size: 9 }, maxRotation: 45 } 
+                }
+            }
+        }
+    });
+}
+
+
+// ۲. تابع جدید برای محاسبه و نمایش آمار در باکس‌های نئونی
+
+function updateChartStats(trades) {
+    const statsContainer = document.getElementById('chart-stats');
+    if (!statsContainer) return;
+
+    // ۱. اضافه کردن total به دسته‌بندی دیتا
+    const m = {
+        total: { pnl: 0, wins: 0, count: 0, rSum: 0, totalRisk: 0, grossWin: 0, grossLoss: 0 },
+        trend: { pnl: 0, wins: 0, count: 0, rSum: 0, totalRisk: 0, grossWin: 0, grossLoss: 0 },
+        range: { pnl: 0, wins: 0, count: 0, rSum: 0, totalRisk: 0, grossWin: 0, grossLoss: 0 },
+        scalp: { pnl: 0, wins: 0, count: 0, rSum: 0, totalRisk: 0, grossWin: 0, grossLoss: 0 }
+    };
+
+    // ۲. پردازش تمام تریدها (هر ترید هم در مود خودش و هم در total جمع می‌شود)
+    trades.forEach(t => {
+        const modes = [t.mode, 'total']; 
+        modes.forEach(mode => {
+            if (m[mode]) {
+                const res = parseFloat(t.resultD) || 0;
+                const risk = parseFloat(t.riskD) || 0;
+                const rVal = parseFloat(t.r) || 0;
+
+                m[mode].pnl += res;
+                m[mode].count += 1;
+                m[mode].rSum += rVal;
+                m[mode].totalRisk += risk;
+
+                if (res > 0) {
+                    m[mode].wins += 1;
+                    m[mode].grossWin += res;
+                } else if (res < 0) {
+                    m[mode].grossLoss += Math.abs(res);
+                }
+            }
+        });
+    });
+
+    // ۳. تابع داخلی برای ساخت کارت‌ها (بدون تغییر در منطق شما)
+    const createBox = (title, data, color, fullWidth = false) => {
+        const winRate = data.count === 0 ? 0 : ((data.wins / data.count) * 100).toFixed(0);
+        const avgR = data.count === 0 ? 0 : (data.rSum / data.count).toFixed(1);
+        const pf = data.grossLoss === 0 ? data.grossWin.toFixed(1) : (data.grossWin / data.grossLoss).toFixed(2);
+        const eff = data.totalRisk === 0 ? 0 : ((data.pnl / data.totalRisk) * 100).toFixed(0);
+
+        // اگر fullWidth باشد، باکس کل عرض را می‌گیرد
+        const gridStyle = fullWidth ? `grid-column: 1 / -1;` : '';
+
+        return `
+            <div class="glass-card" style="${gridStyle} padding:10px; border-bottom: 2px solid ${color}; background:rgba(255,255,255,0.02); margin:0; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="color:${color}; font-size:0.7rem; font-weight:bold;">${title}</span>
+                    <span style="font-size:0.6rem; color:#fff; opacity:0.5;">Eff: ${eff}%</span>
+                </div>
+                <div style="font-size:1.2rem; font-weight:bold; color:${data.pnl >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}">
+                    $${data.pnl.toFixed(1)}
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:4px; margin-top:8px; font-size:0.55rem; color:#aaa; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                    <span>Win: <b style="color:#fff">${winRate}%</b></span>
+                    <span>PF: <b style="color:#fff">${pf}</b></span>
+                    <span>Avg R: <b style="color:#fff">${avgR}</b></span>
+                    <span>تعداد: <b style="color:#fff">${data.count}</b></span>
+                </div>
+            </div>
+        `;
+    };
+
+    // تنظیم استایل کانتینر
+    statsContainer.style.display = 'grid';
+    statsContainer.style.gridTemplateColumns = '1fr 1fr 1fr'; 
+    statsContainer.style.gap = '8px';
+    statsContainer.style.width = "100%";
+    statsContainer.style.marginBottom = "15px";
+
+    // خروجی نهایی: اول باکس کل (Total) و بعد سه بازار پایینش
+    statsContainer.innerHTML = 
+        createBox('💎 مجموع کل معاملات', m.total, '#fff', true) + // باکس کل عرض کامل
+        createBox('📈 TREND', m.trend, 'var(--neon-green)') +
+        createBox('↔️ RANGE', m.range, 'var(--neon-blue)') +
+        createBox('⚡ SCALP', m.scalp, 'var(--neon-yellow)');
+}
+
+
+// ۳. تابع ریست کردن فیلتر (برای کار کردن دکمه ریست)
+function resetChartFilter() {
+    document.getElementById('filter-from').value = '';
+    document.getElementById('filter-to').value = '';
+    MainChart();
+}
+
+
+
+                // تابع باز کردن صفحات (تاریخچه یا نمودار)
+function openPage(pageId) {
+    // ۱. مخفی کردن تمام صفحات جانبی (هر سه صفحه را اینجا لیست می‌کنیم)
+    document.getElementById('history-page').classList.add('page-hidden');
+    document.getElementById('chart-page').classList.add('page-hidden');
+    document.getElementById('vault-page').classList.add('page-hidden'); // اضافه شد تا خزانه هم مخفی شود
+    
+    // ۲. نمایش صفحه مورد نظر کاربر
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.remove('page-hidden');
+    }
+    
+    // ۳. مدیریت دکمه‌های هدر
+    document.getElementById('menu-icon-container').style.display = 'none'; // مخفی کردن همبرگر منو
+    document.getElementById('back-icon').style.display = 'flex'; // ظاهر کردن فلش قرمز (برگشت)
+    
+    // ۴. اجرای توابع محاسباتی مخصوص هر صفحه
+    if(pageId === 'history-page') History();
+    if(pageId === 'chart-page') MainChart();
+    if(pageId === 'vault-page') renderVault();
+
+    // اسکرول به بالای صفحه
+    window.scrollTo(0,0);
+}
+
+
+// تابع بازگشت به میز ترید
+
+function closeAllPages() {
+    // ۱. مخفی کردن تمام صفحات جانبی
+    document.getElementById('history-page').classList.add('page-hidden');
+    document.getElementById('chart-page').classList.add('page-hidden');
+    document.getElementById('vault-page').classList.add('page-hidden');
+    
+    // ۲. برگرداندن آیکون‌های هدر به حالت عادی
+    document.getElementById('menu-icon-container').style.display = 'flex';
+    document.getElementById('back-icon').style.display = 'none';
+
+    // ۳. بستن تمام پنجره‌های بازِ SweetAlert (بسیار مهم)
+    if (typeof Swal !== 'undefined') {
+        Swal.close();
+    }
+}
+
+
+
+
+
+
+
+
+function toggleMenu() {
+    const menu = document.getElementById('side-menu');
+    const overlay = document.getElementById('menu-overlay');
+    if (menu.style.left === '0px') {
+        menu.style.left = '-280px';
+        overlay.style.display = 'none';
+    } else {
+        // آپدیت نوار حافظه هنگام باز شدن منو
+        let used = JSON.stringify(localStorage).length;
+        let total = 5 * 1024 * 1024; // 5MB
+        let percent = ((used / total) * 100).toFixed(2);
+        
+        const bar = document.getElementById('storage-bar');
+        const text = document.getElementById('storage-percent');
+        
+        if(bar && text) {
+            bar.style.width = percent + "%";
+            text.innerText = percent + "%";
+            if (percent > 80) bar.style.background = 'var(--neon-red)';
+        }
+
+        menu.style.left = '0px';
+        overlay.style.display = 'block';
+    }
+}
+
+
+function checkBackupReminder() {
+    const lastBackupDateStr = localStorage.getItem('lastBackupDate');
+    const now = new Date();
+    
+    // ایجاد یک کلید منحصر به فرد برای "امروز" (مثلا: "2026-02-13")
+    const todayKey = now.toISOString().slice(0, 10);
+    
+    // اگر تاریخی ذخیره شده باشد
+    if (lastBackupDateStr) {
+        const lastBackupDate = new Date(parseInt(lastBackupDateStr)).toISOString().slice(0, 10);
+        
+        // اگر تاریخ آخرین بکاپ با تاریخ امروز یکی نیست (یعنی اولین ورودِ امروز است)
+        if (lastBackupDate !== todayKey) {
+            showBackupAlert(now.getTime());
+        }
+    } else {
+        // اگر کلاً تا به حال بکاپ نگرفته باشد
+        showBackupAlert(now.getTime());
+    }
+}
+
+function showBackupAlert(currentTime) {
+    Swal.fire({
+        title: 'شروع روز کاری و پشتیبان‌گیری 🛡️',
+        text: 'سلام! برای امنیت معاملات امروز، همین اول کار یک خروجی از اطلاعاتت بگیر.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'الان کپی می‌کنم',
+        cancelButtonText: 'بعداً',
+        background: '#1a1a1a', 
+        color: '#fff',
+        confirmButtonColor: '#39ff14'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            exportBackup(); // همان تابع کپی در حافظه
+            localStorage.setItem('lastBackupDate', currentTime); 
+        }
+    });
+}
+
+// اجرا در اولین لود برنامه
+window.addEventListener('load', checkBackupReminder);
+
+
+ 
+ function exportBackup() {
+    try {
+        // تبدیل کل اطلاعات به متن
+        const dataStr = JSON.stringify(state);
+        
+        // کپی کردن متن در حافظه گوشی (Clipboard)
+        navigator.clipboard.writeText(dataStr).then(() => {
+            Swal.fire({
+                title: 'کپی شد!',
+                text: 'اطلاعات پشتیبان در حافظه گوشی کپی شد. همین الان آن را در یک پیام در تلگرام یا یک فایل نوت، Paste و ذخیره کنید.',
+                icon: 'success',
+                background: '#1a1a1a', color: '#fff'
+            });
+        }).catch(err => {
+            // اگر مرورگر اجازه کپی خودکار نداد، متن را در یک باکس نشان بده که کاربر خودش کپی کند
+            Swal.fire({
+                title: 'خطا در کپی خودکار',
+                input: 'textarea',
+                inputValue: dataStr,
+                text: 'لطفاً تمام متن بالا را انتخاب و کپی (Copy) کنید و در جایی مطمئن نگه دارید.',
+                background: '#1a1a1a', color: '#fff'
+            });
+        });
+    } catch (e) {
+        alert("خطا در استخراج اطلاعات: " + e.message);
+    }
+}
+
+
+ 
+ 
+ 
+ async function importBackup() {
+    const { value: text } = await Swal.fire({
+        title: 'ورود اطلاعات (Import)',
+        input: 'textarea',
+        inputPlaceholder: 'کل کد فایل پشتیبان را اینجا کپی و پِیست کنید...',
+        inputAttributes: { 'aria-label': 'کد پشتیبان' },
+        showCancelButton: true,
+        confirmButtonText: 'تایید و جایگزینی',
+        background: '#1a1a1a', 
+        color: '#fff'
+    });
+
+    if (text) {
+        try {
+            const importedState = JSON.parse(text);
+            
+            // چک کردن ساختار اصلی دیتا
+            if (importedState && importedState.trades) {
+                
+                // --- بخش هوشمند سازی (Sync) ---
+                // هر ترید را چک میکند که اگر فیلد جدیدی ندارد، مقدار پیش‌فرض بگیرد تا محاسبات خراب نشود
+                importedState.trades = importedState.trades.map(t => ({
+                    ...t,
+                    time: t.time || '--:--', // اگر ساعت نداشت
+                    riskD: t.riskD !== undefined ? parseFloat(t.riskD) : 0, // اگر مقدار ریسک دلاری نداشت
+                    resultD: parseFloat(t.resultD) || 0,
+                    r: parseFloat(t.r) || 0,
+                    mode: t.mode || 'range' // اگر نوع بازار مشخص نبود
+                }));
+
+                // اعمال دیتای جدید در حافظه برنامه
+                state = importedState;
+                saveData(); // ذخیره در LocalStorage
+                
+                Swal.fire({
+                    title: 'موفقیت‌آمیز ✅',
+                    text: 'اطلاعات با موفقیت بازیابی و با ساختار جدید هماهنگ شد.',
+                    icon: 'success',
+                    background: '#1a1a1a', 
+                    color: '#fff'
+                }).then(() => {
+                    location.reload(); // بازنشانی صفحه برای اعمال تغییرات در گراف‌ها
+                });
+
+            } else {
+                throw new Error("ساختار فایل نامعتبر است");
+            }
+        } catch (e) {
+            Swal.fire({
+                title: 'خطا در ورود دیتا',
+                text: 'فرمت کد وارد شده اشتباه است یا دیتا آسیب دیده.',
+                icon: 'error',
+                background: '#1a1a1a', 
+                color: '#fff'
+            });
+        }
+    }
+}
+
+
+  
+  function vaultTransaction(type) {
+    document.activeElement.blur();
+    const title = type === 'deposit' ? 'واریز به خزانه' : 'برداشت از خزانه';
+    const color = type === 'deposit' ? '#39ff14' : '#ff3131';
+
+    Swal.fire({
+        title: title,
+        target: document.getElementById('vault-page'), 
+        html: `<input type="number" id="v-amount" class="swal2-input" placeholder="مبلغ دلاری" style="background:#222; color:white; border-color:${color}">
+               <input type="text" id="v-note" class="swal2-input" placeholder="توضیحات (مثلاً: واریز سود هفته)" style="background:#222; color:white;">`,
+        showCancelButton: true,
+        confirmButtonText: 'ثبت در خزانه',
+        background: '#1a1a1a', color: '#fff',
+                preConfirm: () => {
+            const amount = parseFloat(document.getElementById('v-amount').value);
+            const note = document.getElementById('v-note').value;
+            
+            if (!amount || amount <= 0) return Swal.showValidationMessage('لطفاً مبلغ معتبری وارد کنید');
+
+            // --- بخش جدید: چک کردن سقف برداشت فیزیکی ---
+            if (type === 'withdraw') {
+                // محاسبه دقیق پولی که واقعاً وارد خزانه شده (واریزها منهای برداشت‌ها)
+                const totalIn = state.vault.transactions
+                    .filter(t => t.type === 'deposit')
+                    .reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+                const totalOut = state.vault.transactions
+                    .filter(t => t.type === 'withdraw')
+                    .reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+                
+                const physicalVaultBalance = totalIn - totalOut;
+
+                if (amount > physicalVaultBalance + 0.01) {
+                    return Swal.showValidationMessage(`❌ موجودی نقد خزانه کافی نیست! حداکثر برداشت: $${physicalVaultBalance.toFixed(2)}`);
+                }
+            }
+            return { amount, note };
+        }
+    }).then((res) => {
+        if (res.isConfirmed) {
+            if (!state.vault) state.vault = { transactions: [] };
+
+            const now = new Date();
+            const trans = {
+                id: now.getTime(),
+                type: type,
+                amount: res.value.amount,
+                note: res.value.note,
+                date: now.toLocaleDateString('fa-IR'),
+                time: now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
+                dateValue: toShamsiNum(now)
+            };
+
+            state.vault.transactions.unshift(trans);
+            
+            // یک گارد امنیتی اضافه برای اینکه موجودی هیچ‌وقت منفی نمایش داده نشود
+            saveData();
+            renderVault();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'با موفقیت ثبت شد',
+                timer: 1000,
+                showConfirmButton: false,
+                background: '#1a1a1a', color: '#fff'
+            });
+        }
+    });
+}
+
+
+// --- نسخه اصلاح شده و نهایی انتقال پول هماهنگ با سیستم خزانه ---
+
+function transferFlow(direction, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    // بستن کیبورد برای جلوگیری از مشکلات نمایش در موبایل
+    document.activeElement.blur(); 
+
+    const isToMargin = direction === 'toMargin';
+    const title = isToMargin ? 'انتقال به Margin ⚡' : 'دریافت از Margin 🏦';
+    const color = isToMargin ? '#00d2ff' : '#39ff14'; // آبی برای مارجین، سبز برای خزانه
+    
+    // تعیین سقف مجاز برای انتقال
+    const maxAmount = isToMargin ? (state.vaultCash || 0) : state.balance;
+
+    Swal.fire({
+        title: title,
+        target: document.getElementById('vault-page'), 
+        html: `
+            <div style="text-align:center; color:var(--text-gray); font-size:0.85rem; margin-bottom:15px;">
+                حداکثر مقدار قابل جابجایی: <b style="color:white;">$${maxAmount.toFixed(2)}</b>
+            </div>
+            <input type="number" id="v-transfer-amount" class="swal2-input" 
+                   placeholder="مبلغ را وارد کنید" 
+                   style="background:#222; color:white; border:1px solid ${color}; width:80%; text-align:center; margin:10px auto; display:block;"
+                   inputmode="decimal">
+            <p style="font-size:0.7rem; color:gray; margin-top:5px;">
+                ${isToMargin ? 'مبلغ از گاوصندوق کسر و به حساب ترید اضافه می‌شود.' : 'مبلغ از حساب ترید کسر و به گاوصندوق منتقل می‌شود.'}
+            </p>
+        `,
+        background: '#1a1a1a',
+        color: '#fff',
+        showCancelButton: true,
+        confirmButtonText: 'ثبت انتقال',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: color,
+        preConfirm: () => {
+            const val = document.getElementById('v-transfer-amount').value;
+            const amount = parseFloat(val);
+            
+            if (!val || amount <= 0) {
+                return Swal.showValidationMessage('لطفاً مبلغ معتبری وارد کنید');
+            }
+            if (amount > maxAmount + 0.01) {
+                return Swal.showValidationMessage(`موجودی کافی نیست! (حداکثر $${maxAmount.toFixed(2)})`);
+            }
+            return amount;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const amount = result.value;
+            
+            // اجرای جابجایی
+            if (isToMargin) {
+                state.balance += amount;
+            } else {
+                state.balance -= amount;
+            }
+
+            // ذخیره و بروزرسانی رابط کاربری
+            saveData();
+            UI(); 
+            calculateAll(); 
+            renderVault(); 
+
+            if (typeof Sound !== 'undefined') Sound.play('success');
+
+            // تاییدیه نهایی و پیشنهاد ریست کردن شروع روز
+            Swal.fire({
+                title: 'انتقال انجام شد ✅',
+                text: "آیا می‌خواهید مبنای شروع روز (Day Start) به بالانس جدید تغییر کند؟",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'بله، ریست شود',
+                cancelButtonText: 'خیر، فعلاً نه',
+                background: '#1a1a1a', 
+                color: '#fff'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    state.dayStartBalance = state.balance;
+                    state.consumedRisk = 0; 
+                    saveData();
+                    UI();
+                    renderVault();
+                }
+            });
+        }
+    });
+}
+
+
+
+
+function renderVault() {
+    // ۱. اطمینان از وجود ساختارها
+    if (!state.vault) state.vault = { transactions: [] };
+    
+    // ۲. محاسبه مجموع واریز/برداشت مستقیم (پول فیزیکی که وارد برنامه شده)
+    const totalExternalDep = state.vault.transactions
+        .filter(t => t.type === 'deposit')
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        
+    const totalExternalWit = state.vault.transactions
+        .filter(t => t.type === 'withdraw')
+        .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+    // ۳. محاسبه سود/ضرر کل معاملات ثبت شده
+    const totalTradesProfit = state.trades.reduce((sum, t) => sum + (parseFloat(t.resultD) || 0), 0);
+
+    // ۴. دارایی کل = (واریز - برداشت مستقیم) + سود معاملات
+    const totalAsset = (totalExternalDep - totalExternalWit) + totalTradesProfit;
+
+    // ۵. موجودی صندوق = دارایی کل - آنچه در مارجین است
+    // نکته: state.balance همان عدد In Margin است
+    state.vaultCash = totalAsset - state.balance;
+
+    // ۶. آپدیت نمایشگرها
+    document.getElementById('v-total-asset').innerText = `$${totalAsset.toFixed(2)}`;
+    document.getElementById('v-safe-vault').innerText = `$${state.vaultCash.toFixed(2)}`;
+    document.getElementById('v-in-margin').innerText = `$${state.balance.toFixed(2)}`;
+    document.getElementById('v-day-start').innerText = `$${state.dayStartBalance.toFixed(2)}`;
+
+    // ۷. رندر لیست تاریخچه تراکنش‌های مستقیم
+    const list = document.getElementById('vault-history-list');
+    list.innerHTML = '<h4 style="color:var(--neon-blue); margin: 15px 0;">📜 تراکنش‌های مستقیم خزانه</h4>';
+    state.vault.transactions.forEach(t => {
+        list.innerHTML += `
+            <div class="glass-card" style="padding:10px; border-right: 4px solid ${t.type==='deposit'?'var(--neon-green)':'var(--neon-red)'}; margin-bottom:8px; background: rgba(255,255,255,0.02); font-size:0.8rem;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>${t.type==='deposit'?'➕ واریز':'➖ برداشت'} $${t.amount}</span>
+                    <small style="color:#666;">${t.date}</small>
+                </div>
+            </div>`;
+    });
+}
+
+
+// قفل کردن اینپوت بالانس در صورت وجود ترید
+function checkBalanceLock() {
+    const balInput = document.getElementById('balance');
+    if (!balInput) return;
+
+    // قفل همیشگی: تحت هیچ شرایطی اجازه تایپ دستی نمی‌دهد
+    balInput.readOnly = true; 
+    
+    // استایل ظاهری برای اینکه کاربر متوجه شود این فیلد فقط نمایشی است
+    balInput.style.opacity = "0.8";
+    balInput.style.cursor = "not-allowed";
+    balInput.style.background = "rgba(255, 255, 255, 0.03)";
+    balInput.style.border = "1px solid rgba(0, 210, 255, 0.2)";
+    
+    // راهنمایی به کاربر هنگام نگه داشتن موس یا لمس
+    balInput.title = "تغییر موجودی فقط از طریق منوی خزانه امکان‌پذیر است";
+    
+    // یک لایه امنیتی اضافی: اگر کاربر سعی کرد با کلیک کردن فوکوس کند، فوکوس برداشته شود
+    balInput.onfocus = () => balInput.blur();
+}
+
+
+
+
+function exportToExcel() {
+    if (state.trades.length === 0) return Swal.fire('خالی', 'تریدی برای خروجی وجود ندارد', 'warning');
+
+    try {
+        // ایجاد محتوا با استفاده از Tab به جای کاما برای تفکیک خودکار ستون‌ها
+        let csvContent = ""; 
+        
+        // سرتیترها (Headers) دقیقا مطابق نیاز شما
+        const headers = ["تاریخ", "زمان", "نوع بازار", "امتیاز", "بالانس ورود", "ریسک(USD)", "سود-ضرر(USD)", "R کسب شده", "یادداشت"];
+        csvContent += headers.join("\t") + "\n";
+
+        // استخراج تریدها از قدیمی به جدید
+        [...state.trades].reverse().forEach(t => {
+            const row = [
+                t.date,
+                t.time || '',
+                t.mode,
+                t.score,
+                t.entryBalance,
+                t.riskD,
+                t.resultD,
+                t.r,
+                (t.note || '').replace(/\t/g, ' ') // پاکسازی تب‌های احتمالی در یادداشت برای بهم نخوردن ستون‌ها
+            ].join("\t");
+            csvContent += row + "\n";
+        });
+
+        // کپی در حافظه موقت (Clipboard)
+        navigator.clipboard.writeText(csvContent).then(() => {
+            Swal.fire({
+                title: 'آماده پِیست (Paste) ✅',
+                text: 'گزارش با فرمت ستونی کپی شد. حالا در گوگل شیت بزنید روی سلول A1 و Paste کنید.',
+                icon: 'success',
+                background: '#1a1a1a', 
+                color: '#fff'
+            });
+        }).catch(err => {
+            // نمایش در باکس برای کپی دستی اگر مرورگر مسدود کرد
+            Swal.fire({
+                title: 'کپی دستی',
+                input: 'textarea',
+                inputValue: csvContent,
+                text: 'مرورگر اجازه کپی خودکار نداد. متن بالا را کپی کرده و در گوگل شیت پِیست کنید.',
+                background: '#1a1a1a', color: '#fff'
+            });
+        });
+    } catch (e) {
+        Swal.fire('خطا', 'مشکلی در تولید گزارش پیش آمد: ' + e.message, 'error');
+    }
+}
+
+
+
+function calculateSLCredit(currentBal, startBal, riskPercent) {
+    // ۱. اگر هنوز هیچ تریدی ثبت نشده، اعتبار همیشه صفر باشد (حتی اگر پول واریز شده باشد)
+    if (!state.trades || state.trades.length === 0) return "0";
+
+    // ۲. اگر موجودی فعلی از شروع روز کمتر باشد (در ضرر باشیم) یا ریسک صفر باشد
+    if (currentBal <= startBal || riskPercent <= 0) return "0";
+
+    try {
+        let ratio = startBal / currentBal;
+        let riskFactor = 1 - (riskPercent / 100);
+        
+        // ۳. محاسبه فرمول لگاریتمی
+        let credit = Math.log(ratio) / Math.log(riskFactor);
+        
+        // ۴. برگرداندن عدد بدون سقف (فقط با یک رقم اعشار برای زیبایی ظاهر)
+        return credit.toFixed(1);
+    } catch (e) {
+        return "0";
+    }
+}
+
+
+function updateFooterStyle(riskP, mode) {
+    const footerEl = document.getElementById('sticky-bar');
+    if (!footerEl) return;
+
+    let bgStyle = "";
+    let borderStyle = "";
+
+    // منطق اولویت اسکلپ
+    if (mode === 'scalp' || mode === 'اسکپ') {
+        bgStyle = "linear-gradient(to top, rgba(255, 49, 49, 0.5), rgba(10, 10, 12, 0.98))";
+        borderStyle = "2px solid var(--neon-red)";
+    } else {
+        // منطق بر اساس درصد ریسک
+        if (riskP <= 3) {
+            bgStyle = "linear-gradient(to top, rgba(255, 49, 49, 0.4), rgba(10, 10, 12, 0.98))";
+            borderStyle = "2px solid var(--neon-red)";
+        } else if (riskP <= 4) {
+            bgStyle = "linear-gradient(to top, rgba(255, 230, 0, 0.3), rgba(10, 10, 12, 0.98))";
+            borderStyle = "2px solid var(--neon-yellow)";
+        } else {
+            bgStyle = "linear-gradient(to top, rgba(57, 255, 20, 0.4), rgba(10, 10, 12, 0.98))";
+            borderStyle = "2px solid var(--neon-green)";
+        }
+    }
+
+    footerEl.style.background = bgStyle;
+    footerEl.style.borderTop = borderStyle;
+    footerEl.style.transition = "all 0.2s ease"; // انیمیشن نرم
+}
+
+
+</script>
+
+</body>
+</html>
