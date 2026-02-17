@@ -1,22 +1,21 @@
 {
-  "name": "TradeCalc",
-  "short_name": "TradeCalc",
-  "start_url": "./app.html",
+  "name": "Trading Plan App",
+  "short_name": "TradingPlan",
+  "start_url": "app.html",
   "display": "standalone",
-  "background_color": "#0a0a0c",
-  "theme_color": "#00d2ff",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
-      "src": "./63281.png",
+      "src": "https://ali09198309643-del.github.io/Trading-plan/63281.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "./63281.png",
+      "src": "https://ali09198309643-del.github.io/Trading-plan/63281.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     }
   ]
 }
